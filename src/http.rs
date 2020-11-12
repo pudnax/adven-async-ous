@@ -5,8 +5,6 @@ pub struct Http;
 impl Http {
     pub fn http_get_slow(url: &str, delay_ms: u32, cb: impl Fn(Js) + 'static + Clone) {
         let rt: &mut Runtime = unsafe { &mut *RUNTIME };
-        // Don't worry, http://slowwly.robertomurray.co.uk is a site for simulating a delayed
-        // response from a server. Perfect for our use case.
         let adr = "slowwly.robertomurray.co.uk:80";
         let mut stream = minimio::TcpStream::connect(adr).unwrap();
 
@@ -24,7 +22,7 @@ impl Http {
 
         let token = rt.generate_cb_identity();
         rt.epoll_registrator
-            .register(&mut stream, token, minimio::Interests::READABLE)
+            .register(&stream, token, minimio::Interests::READABLE)
             .unwrap();
 
         let wrapped = move |_n| {

@@ -1,11 +1,21 @@
 use std::{
     collections::{BTreeMap, HashMap},
+    fmt::{self, Display},
+    io,
     sync::mpsc::{channel, Receiver, Sender},
     sync::{Arc, Mutex},
     thread,
     thread::JoinHandle,
     time::{Duration, Instant},
 };
+
+pub fn current() -> String {
+    thread::current().name().unwrap().to_string()
+}
+
+pub fn print(t: impl std::fmt::Display) {
+    println!("Thread: {}\t {}", current(), t);
+}
 
 const NUM_THREADS: usize = 4;
 
@@ -35,9 +45,9 @@ pub struct Runtime {
 impl Runtime {
     pub fn new() -> Self {
         let (event_sender, event_receiver) = channel::<PollEvent>();
-        let mut threads = Vec::with_capacity(4);
+        let mut threads = Vec::with_capacity(NUM_THREADS);
 
-        for i in 0..4 {
+        for i in 0..NUM_THREADS {
             let (evt_sender, evt_receiver) = channel::<Task>();
             let event_sender = event_sender.clone();
 
@@ -139,7 +149,7 @@ impl Runtime {
             ticks += 1;
             print(format!("===== TICK {} =====", ticks));
             self.process_expired_timers();
-            self.run_callbacks();
+            self.run_callback();
             if self.pending_events == 0 {
                 break;
             }
@@ -149,10 +159,10 @@ impl Runtime {
 
             drop(epoll_timeout_lock);
 
-            if let Ok(event) = self.event_reciever.recv() {
+            if let Ok(event) = self.event_receiver.recv() {
                 match event {
                     PollEvent::Timeout => (),
-                    PollEvent::Threadpool((thread_id, callback_id, data)) => {
+                    PollEvent::ThreadPool((thread_id, callback_id, data)) => {
                         self.process_threadpool_events(thread_id, callback_id, data);
                     }
                     PollEvent::Epoll(event_id) => {
@@ -160,7 +170,7 @@ impl Runtime {
                     }
                 }
             }
-            self.run_callbacks();
+            self.run_callback();
         }
         for thread in self.thread_pool.into_iter() {
             thread
@@ -190,7 +200,7 @@ impl Runtime {
     }
 
     fn get_next_timeout(&self) -> Option<i32> {
-        self.timers.iter().nth(0).map(|(&instant, _)| {
+        self.timers.iter().next().map(|(&instant, _)| {
             let mut tim_to_next_timeout = instant - Instant::now();
             if tim_to_next_timeout < Duration::new(0, 0) {
                 tim_to_next_timeout = Duration::new(0, 0);
@@ -295,10 +305,6 @@ impl Runtime {
     }
 }
 
-fn f() {
-    todo!()
-}
-
 struct Task {
     task: Box<dyn Fn() -> Js + Send + 'static>,
     callback_id: usize,
@@ -326,6 +332,17 @@ pub enum ThreadPoolTaskKind {
     Close,
 }
 
+impl Display for ThreadPoolTaskKind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use ThreadPoolTaskKind::*;
+        match self {
+            FileRead => write!(f, "File read"),
+            Encrypt => write!(f, "Encrypt"),
+            Close => write!(f, "Close"),
+        }
+    }
+}
+
 pub enum Js {
     Undefined,
     String(String),
@@ -333,14 +350,14 @@ pub enum Js {
 }
 
 impl Js {
-    fn into_string(self) -> Option<String> {
+    pub fn into_string(self) -> Option<String> {
         match self {
             Js::String(s) => Some(s),
             _ => None,
         }
     }
 
-    fn into_int(self) -> Option<usize> {
+    pub fn into_int(self) -> Option<usize> {
         match self {
             Js::Int(n) => Some(n),
             _ => None,
