@@ -1,3 +1,4 @@
+mod crypto;
 mod fs;
 mod runtime;
 
