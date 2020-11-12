@@ -21,7 +21,7 @@ pub struct Runtime {
     callbacks_to_run: Vec<(usize, Js)>,
     callback_queue: HashMap<usize, Box<dyn FnOnce(Js)>>,
     epoll_pending_events: usize,
-    epoll_registrator: minimio::Registrator,
+    pub epoll_registrator: minimio::Registrator,
     epoll_thread: thread::JoinHandle<()>,
     epoll_timeout: Arc<Mutex<Option<i32>>>, // fix
     event_receiver: Receiver<PollEvent>,
@@ -231,7 +231,7 @@ impl Runtime {
         self.identity_token
     }
 
-    fn generate_cb_identity(&mut self) -> usize {
+    pub fn generate_cb_identity(&mut self) -> usize {
         let ident = self.generate_identity();
         let taken = self.callback_queue.contains_key(&ident); // fix
 
