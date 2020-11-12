@@ -9,7 +9,7 @@ use std::{
 
 const NUM_THREADS: usize = 4;
 
-static mut RUNTIME: *mut Runtime = std::ptr::null_mut();
+pub static mut RUNTIME: *mut Runtime = std::ptr::null_mut();
 
 pub fn set_timeout(ms: u64, cb: impl Fn(Js) + 'static) {
     let rt = unsafe { &mut *(RUNTIME as *mut Runtime) };
@@ -321,7 +321,7 @@ struct NodeThread {
 }
 
 pub enum ThreadPoolTaskKind {
-    FileRed,
+    FileRead,
     Encrypt,
     Close,
 }
