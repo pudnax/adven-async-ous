@@ -10,7 +10,7 @@ fn main() {
 fn dereference(ptr: *const usize) -> usize {
     let res: usize;
     unsafe {
-        asm!("mov {1}, {0}",
+        asm!("mov {0}, [{1}]",
         out(reg) res,
         in(reg) ptr
         )
