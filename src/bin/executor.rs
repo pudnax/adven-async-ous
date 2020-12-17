@@ -78,6 +78,7 @@ enum TaskState {
 
 #[derive(Debug)]
 enum Event {
+    #[allow(dead_code)]
     Close,
     Timeout(u64, usize),
 }
@@ -147,10 +148,7 @@ impl Reactor {
     fn is_ready(&self, id: usize) -> bool {
         self.tasks
             .get(&id)
-            .map(|state| match state {
-                TaskState::Ready => true,
-                _ => false,
-            })
+            .map(|state| matches!(state, TaskState::Ready))
             .unwrap_or(false)
     }
 }
@@ -209,7 +207,7 @@ fn main() {
     let reactor = Reactor::new();
 
     let future1 = Task::new(reactor.clone(), 1, 1);
-    let future2 = Task::new(reactor.clone(), 2, 2);
+    let future2 = Task::new(reactor, 2, 2);
 
     let fut1 = async {
         let val = future1.await;

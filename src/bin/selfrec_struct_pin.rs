@@ -18,6 +18,7 @@ impl Test {
         }
     }
 
+    #[allow(dead_code)]
     fn new_boxed(txt: &str) -> Pin<Box<Self>> {
         let t = Self {
             a: String::from(txt),
