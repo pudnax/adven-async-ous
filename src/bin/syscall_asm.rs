@@ -1,7 +1,7 @@
 #![feature(asm)]
 
 fn main() {
-    let message = "Hello from the Interrupt World!\n".to_string();
+    let message = "Hello from the Interrupted World!\n".to_string();
     syscall(message);
 }
 
