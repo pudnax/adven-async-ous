@@ -1,4 +1,4 @@
-#![feature(optin_builtin_traits, negative_impls)] // needed to implement `!Unpin`
+#![feature(negative_impls)] // needed to implement `!Unpin`
 use std::pin::Pin;
 
 pub fn main() {
