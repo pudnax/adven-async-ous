@@ -59,3 +59,40 @@ fn main() {
     println!("Sub: 3 - 2 = {}", test.sub());
     println!("Mul: 3 * 2 = {}", test.mul());
 }
+
+struct A;
+
+impl Thing for A {}
+
+trait Thing {
+    fn a(&self) { println!("A!"); }
+    fn b(&self) { println!("B!"); }
+    fn c(&self) { println!("C!"); }
+}
+
+#[repr(C)]
+struct VTable {
+    size: usize,
+    align: usize,
+    drop_in_place: fn(*const ()),
+    func_a: fn(&A),
+    func_b: fn(&A),
+    func_c: fn(&A),
+}
+
+#[repr(C)]
+struct DynPtr<'a> {
+    thing: &'a A,
+    vtable: &'static VTable,
+}
+
+fn main2() {
+    let a = A;
+    
+    let dyn_ptr = &a as &dyn Thing;
+    let dyn_ptr: DynPtr = unsafe { std::mem::transmute(dyn_ptr) };
+    
+    (dyn_ptr.vtable.func_a)(&a);
+    (dyn_ptr.vtable.func_b)(&a);
+    (dyn_ptr.vtable.func_c)(&a);
+}
