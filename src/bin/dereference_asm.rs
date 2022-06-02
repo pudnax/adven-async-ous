@@ -1,4 +1,3 @@
-#![feature(asm)]
 fn main() {
     let t = 100;
     let t_ptr: *const usize = &t;
@@ -10,7 +9,7 @@ fn main() {
 fn dereference(ptr: *const usize) -> usize {
     let res: usize;
     unsafe {
-        asm!("mov {0}, [{1}]",
+        std::arch::asm!("mov {0}, [{1}]",
         out(reg) res,
         in(reg) ptr
         )

@@ -1,4 +1,4 @@
-#![feature(asm)]
+use std::arch::asm;
 
 fn main() {
     let message = "Hello from the Interrupted World!\n".to_string();
