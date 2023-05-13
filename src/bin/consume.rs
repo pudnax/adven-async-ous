@@ -45,6 +45,23 @@ macro_rules! consume_reader {
             .map(|_| <$ty>::from_le_bytes(bytes))
     }};
 }
+            
+#[macro_export]
+macro_rules! consume2 {
+    ($buf:expr, $ty:ty) => {{
+        // Slice up the buffer to the size we need
+        $buf.get(..std::mem::size_of::<$ty>()).map(|x| {
+            // Get the value
+            let val = <$ty>::from_le_bytes(x.try_into().unwrap());
+
+            // Advance the buffer
+            $buf = &$buf[std::mem::size_of::<$ty>()..];
+
+            // Return the value!
+            val
+        })
+    }}
+}
 
 #[cfg(test)]
 mod test {
