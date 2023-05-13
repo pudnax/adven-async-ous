@@ -62,6 +62,47 @@ macro_rules! consume2 {
         })
     }}
 }
+            
+            /// Consume values which implement `from_le_bytes` from a buffer, advancing
+/// the buffer beyond the bytes that were consumed
+#[macro_export]
+macro_rules! consumee {
+    ($buf:expr, $ty:ty) => {{
+        consume!($buf, $ty,).map(|x| x.0)
+    }};
+
+    ($buf:expr, $($ty:ty),*$(,)?) => {{
+        /// Total size we need to consume for all values combined
+        const TOTAL_SIZE: usize = $(
+            core::mem::size_of::<$ty>() +
+        )* 0;
+
+        // Slice up the buffer to the size we need
+        $buf.get(..TOTAL_SIZE).map(|mut _x| {
+            // Advance the buffer
+            $buf = &$buf[TOTAL_SIZE..];
+
+            // Return the values!
+            ($(
+                {
+                    // Get the value
+                    let val = <$ty>::from_le_bytes(
+                        _x[..core::mem::size_of::<$ty>()].try_into().unwrap());
+
+                    // Advance pointer
+                    _x = &_x[core::mem::size_of::<$ty>()..];
+
+                    // Return value
+                    val
+                },
+            )*)
+        })
+    }};
+}
+
+pub fn safe_transmute(mut data: &[u8]) -> Option<(u32, u32)> {
+    consume!(data, u8, u8).map(|(a, b)| (a as _, b as _))
+}
 
 #[cfg(test)]
 mod test {
