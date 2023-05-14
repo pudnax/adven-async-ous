@@ -147,5 +147,44 @@ mod test {
         assert_eq!(999, val);
     }
 }
+            
+/*
+#![feature(split_array)]
+
+/// Consume a value which implements `from_le_bytes` from a buffer, advancing
+/// the buffer beyond the bytes that were consumed
+#[macro_export]
+macro_rules! consume {
+    ($buf:expr, $ty:ty) => {{
+        const SIZE: usize = std::mem::size_of::<$ty>();
+
+        // check that we have enough bytes to extract a $ty
+        // + 1 instead of >= because >= confuses llvm so it 
+        // refuses to fuse multiple checks with multiple consume! calls
+        if $buf.len() + 1 > SIZE {
+            // split into &[u8; SIZE] and &[u8]
+            let (x, rest) = $buf.split_array_ref::<SIZE>();
+
+            // get the val
+            let val = <$ty>::from_le_bytes(*x);
+
+            // advance the buffer
+            $buf = rest;
+            Some(val)
+        } else {
+            None
+        }
+    }}
+}
+
+pub fn parse(mut ptr: &[u8]) -> Option<(u32, u64, u32, u32)> {
+    Some((
+        consume!(ptr, u32)?,
+        consume!(ptr, u64)?,
+        consume!(ptr, u32)?,
+        consume!(ptr, u32)?,
+    ))
+}
+*/
 
 fn main() {}
